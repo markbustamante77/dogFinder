@@ -7,9 +7,9 @@ import jsonpath
 
 
 class DogFinderUITestCases(unittest.TestCase):
-    @classmethod
+
     def setUp(inst):
-        # create new chrome instance
+        # create new chrome instance (chromedriver is assumed in  sys enviro variables)
         inst.driver = webdriver.Chrome('chromedriver')
         inst.driver.implicitly_wait(30)
         inst.driver.maximize_window()
@@ -27,7 +27,6 @@ class DogFinderUITestCases(unittest.TestCase):
         dog_icons = self.driver.find_elements_by_xpath("//div[starts-with(@class,'dog-marker')]")
 
         for icon in dog_icons:
-
             self.assertFalse(icon.is_displayed())
 
     def test_parks_toggle_button(self):
@@ -40,21 +39,26 @@ class DogFinderUITestCases(unittest.TestCase):
             self.assertFalse(icon.is_displayed())
 
     def test_parks_and_dogs_icons_counts(self):
+        # Get the count of items from both API endpoints and make sure that the correct number of dogs
+        # and parks are being rendered
         dogs = "http://dogfinder.emboldhealth.com/dogs?limit=100"
         parks = "http://dogfinder.emboldhealth.com/parks?limit=20"
 
         response_dogs = jsonpath.jsonpath(requests.get(url=dogs).json(), 'results')
         response_parks = jsonpath.jsonpath(requests.get(url=parks).json(), 'results')
 
+        # api variables for list length
         dogs_count = response_dogs[0].__len__()
         parks_count = response_parks[0].__len__()
 
+        # making clicks in UI to verify dog icons on page
         parks_button = self.driver.find_element_by_xpath("//div[text()='Parks']")
         parks_button.click()
         dog_icons = self.driver.find_elements_by_xpath("//div[starts-with(@class,'dog-marker')]")
 
         self.assertTrue(dog_icons.__len__() == dogs_count)
 
+        # making clicks in UI to verify park icons on page
         parks_button.click()
         dogs_button = self.driver.find_element_by_xpath("//div[text()='Dogs']")
         dogs_button.click()
@@ -63,7 +67,6 @@ class DogFinderUITestCases(unittest.TestCase):
 
         self.assertTrue(park_icons.__len__() == parks_count)
 
-    @classmethod
     def tearDown(inst):
         # close browser
         inst.driver.quit()
@@ -83,6 +86,7 @@ class DogFinderUITestCases(unittest.TestCase):
     def element_does_not_exist(self):
         with self.assertRaises(NoSuchElementException):
             self.driver.find_elements_by_xpath("locator")
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
